@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Pipeline">
+<title>Pipeline — Suivi de candidatures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #f4f5f9;
+  --bg-soft:   #eceef5;
+  --card:      #ffffff;
+  --text:      #1a1c29;
+  --text2:     #6b7280;
+  --text3:     #9aa0ad;
+  --text4:     #c2c6ce;
+  --border:    #e8eaef;
+  --border2:   #dde0e8;
+  --accent:    #5b5ff0;
+  --accent-lt: #eef0fe;
+  --accent-dk: #4347c9;
+  --shadow:    0 1px 3px rgba(20,24,40,.05), 0 1px 2px rgba(20,24,40,.04);
+  --shadow-lg: 0 12px 32px rgba(20,24,40,.12);
+
+  --c-wishlist:    #6b7280; --c-wishlist-bg:#f1f2f5;
+  --c-applied:     #2563eb; --c-applied-bg: #eaf1ff;
+  --c-interview:   #d97706; --c-interview-bg:#fef6e7;
+  --c-offer:       #059669; --c-offer-bg:   #e8f8f1;
+  --c-rejected:    #dc2626; --c-rejected-bg:#fdedec;
+
+  --radius:    18px;
+  --radius-sm: 13px;
+  --radius-xs: 9px;
+  --safe-top:  env(safe-area-inset-top, 0px);
+  --safe-bot:  env(safe-area-inset-bottom, 0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);display:flex;flex-direction:column;max-width:430px;margin:0 auto;-webkit-font-smoothing:antialiased;}
+
+#topnav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding-top:var(--safe-top);}
+.topnav-brand{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;}
+.brand-name{font-size:18px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;}
+.brand-icon{width:28px;height:28px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.brand-icon svg{width:16px;height:16px;stroke:#fff;stroke-width:2.4;}
+.brand-date{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+.tabs{display:flex;gap:2px;padding:0 12px 10px;overflow-x:auto;}
+.tab-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);background:none;border:none;cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0;}
+.tab-btn svg{width:15px;height:15px;stroke-width:2.2;}
+.tab-btn.active{background:var(--accent);color:#fff;}
+.tab-btn:not(.active):active{background:var(--bg-soft);}
+
+#app-main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--safe-bot) + 90px);}
+.page{display:none;}
+.page.active{display:block;}
+.section{padding:16px 18px 0;}
+.section:last-child{padding-bottom:16px;}
+
+.fab{position:fixed;bottom:calc(24px + var(--safe-bot));right:calc(50% - 215px + 20px);width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;border:none;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-lg);cursor:pointer;z-index:90;transition:transform .15s;}
+.fab:active{transform:scale(.93);}
+.fab svg{width:24px;height:24px;stroke-width:2.5;}
+@media(min-width:430px){.fab{right:24px;}}
+
+.page-title{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-bottom:2px;}
+.page-sub{font-size:13px;color:var(--text2);margin-bottom:18px;}
+.section-label{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.section-label .see-all{font-size:12px;font-weight:600;color:var(--accent);cursor:pointer;}
+
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:16px;margin-bottom:12px;}
+
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--card);border-radius:var(--radius-sm);border:1px solid var(--border);box-shadow:var(--shadow);padding:14px 15px;}
+.stat-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.stat-icon{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;}
+.stat-icon svg{width:15px;height:15px;stroke-width:2.2;}
+.stat-num{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1;}
+.stat-lbl{font-size:11.5px;color:var(--text2);font-weight:500;margin-top:3px;}
+
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;letter-spacing:.01em;}
+.b-wishlist{background:var(--c-wishlist-bg);color:var(--c-wishlist);}
+.b-applied{background:var(--c-applied-bg);color:var(--c-applied);}
+.b-interview{background:var(--c-interview-bg);color:var(--c-interview);}
+.b-offer{background:var(--c-offer-bg);color:var(--c-offer);}
+.b-rejected{background:var(--c-rejected-bg);color:var(--c-rejected);}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+.co-logo{width:42px;height:42px;border-radius:11px;background:var(--accent-lt);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0;}
+
+.app-row{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 14px;margin-bottom:8px;box-shadow:var(--shadow);cursor:pointer;transition:border-color .15s;}
+.app-row:active{border-color:var(--border2);}
+.app-row-body{flex:1;min-width:0;}
+.app-row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:3px;}
+.app-company{font-size:14.5px;font-weight:700;letter-spacing:-.01em;}
+.app-role{font-size:12.5px;color:var(--text2);margin-bottom:6px;}
+.app-meta-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.app-meta{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3);}
+.app-meta svg{width:12px;height:12px;stroke-width:2.2;}
+
+.search-wrap{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:12px;box-shadow:var(--shadow);}
+.search-wrap svg{width:17px;height:17px;stroke:var(--text3);stroke-width:2.2;flex-shrink:0;}
+.search-wrap input{border:none;background:none;padding:0;font-size:14px;flex:1;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;outline:none;}
+.search-wrap input::placeholder{color:var(--text4);}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.chip{font-size:12px;font-weight:600;padding:6px 13px;border-radius:18px;border:1px solid var(--border2);background:var(--card);color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+.kanban-scroller{display:flex;gap:12px;overflow-x:auto;padding:2px 18px 8px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;}
+.kanban-scroller::-webkit-scrollbar{display:none;}
+.kanban-col{flex:0 0 78%;scroll-snap-align:start;max-width:300px;}
+.kanban-col-hd{display:flex;align-items:center;justify-content:space-between;padding:0 2px;margin-bottom:10px;}
+.kanban-col-title{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;}
+.kanban-count{font-size:11px;font-weight:700;color:var(--text3);background:var(--bg-soft);padding:2px 8px;border-radius:8px;}
+.kanban-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 14px;margin-bottom:9px;box-shadow:var(--shadow);cursor:pointer;}
+.kc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
+.kc-company{font-size:14px;font-weight:700;letter-spacing:-.01em;line-height:1.25;}
+.kc-role{font-size:12px;color:var(--text2);margin-top:1px;}
+.kc-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.kc-date{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+.kc-actions{display:flex;gap:6px;}
+.kc-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--border2);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:all .15s;}
+.kc-btn:active{transform:scale(.92);background:var(--bg-soft);}
+.kc-btn svg{width:14px;height:14px;stroke-width:2.4;}
+.kc-empty{text-align:center;padding:30px 10px;color:var(--text3);font-size:12px;border:1.5px dashed var(--border2);border-radius:var(--radius-sm);}
+.scroll-dots{display:flex;gap:5px;justify-content:center;padding:4px 0 12px;}
+.scroll-dot{width:5px;height:5px;border-radius:50%;background:var(--border2);}
+.scroll-dot.active{background:var(--accent);width:14px;border-radius:3px;transition:all .2s;}
+
+.funnel-row{display:flex;align-items:center;gap:10px;margin-bottom:11px;}
+.funnel-lbl{font-size:12px;font-weight:600;color:var(--text2);width:72px;flex-shrink:0;}
+.funnel-track{flex:1;height:28px;background:var(--bg-soft);border-radius:8px;overflow:hidden;position:relative;}
+.funnel-fill{height:100%;border-radius:8px;display:flex;align-items:center;padding-left:10px;transition:width .6s cubic-bezier(.4,0,.2,1);}
+.funnel-fill span{font-size:12px;font-weight:700;color:#fff;}
+.funnel-pct{font-size:12px;font-weight:700;color:var(--text2);width:38px;text-align:right;flex-shrink:0;}
+
+.week-chart{display:flex;align-items:flex-end;gap:6px;height:120px;padding:0 2px;margin-top:6px;}
+.week-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;}
+.week-bar{width:100%;background:var(--accent);border-radius:6px 6px 3px 3px;min-height:4px;transition:height .5s ease;}
+.week-lbl{font-size:9.5px;color:var(--text3);font-weight:600;font-family:'JetBrains Mono',monospace;}
+
+.empty{text-align:center;padding:50px 24px;}
+.empty-icon{width:60px;height:60px;border-radius:16px;background:var(--accent-lt);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;}
+.empty-icon svg{width:28px;height:28px;stroke:var(--accent);stroke-width:1.8;}
+.empty h3{font-size:15px;font-weight:700;margin-bottom:5px;}
+.empty p{font-size:12.5px;color:var(--text2);line-height:1.6;max-width:240px;margin:0 auto;}
+
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;display:block;}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+input,select,textarea{width:100%;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text);background:var(--bg-soft);border:1.5px solid transparent;border-radius:var(--radius-xs);padding:11px 13px;-webkit-appearance:none;outline:none;transition:border-color .15s,background .15s;}
+input::placeholder,textarea::placeholder{color:var(--text4);}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);background:var(--card);}
+textarea{resize:none;line-height:1.6;}
+select{cursor:pointer;}
+
+.status-picker{display:flex;gap:6px;flex-wrap:wrap;}
+.status-pill{flex:1;min-width:70px;text-align:center;padding:9px 8px;border-radius:var(--radius-xs);font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:var(--card);color:var(--text2);transition:all .15s;}
+.status-pill.sel-wishlist.active{background:var(--c-wishlist-bg);border-color:var(--c-wishlist);color:var(--c-wishlist);}
+.status-pill.sel-applied.active{background:var(--c-applied-bg);border-color:var(--c-applied);color:var(--c-applied);}
+.status-pill.sel-interview.active{background:var(--c-interview-bg);border-color:var(--c-interview);color:var(--c-interview);}
+.status-pill.sel-offer.active{background:var(--c-offer-bg);border-color:var(--c-offer);color:var(--c-offer);}
+.status-pill.sel-rejected.active{background:var(--c-rejected-bg);border-color:var(--c-rejected);color:var(--c-rejected);}
+
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,18,30,.4);z-index:200;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .25s;}
+.modal-backdrop.open{opacity:1;pointer-events:all;}
+.modal-sheet{background:var(--card);border-radius:24px 24px 0 0;width:100%;max-width:430px;margin:0 auto;padding:0 0 calc(22px + var(--safe-bot));transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.modal-backdrop.open .modal-sheet{transform:translateY(0);}
+.modal-handle{width:36px;height:4px;border-radius:2px;background:var(--border2);margin:12px auto 14px;}
+.modal-hd{display:flex;justify-content:space-between;align-items:center;padding:0 18px 16px;}
+.modal-title{font-size:17px;font-weight:800;letter-spacing:-.01em;}
+.modal-close{width:32px;height:32px;border-radius:10px;background:var(--bg-soft);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);}
+.modal-close svg{width:16px;height:16px;stroke-width:2.4;}
+.modal-body{padding:0 18px;}
+.form-actions{display:flex;gap:10px;margin-top:6px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:14px;font-weight:700;padding:13px 20px;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif;}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--accent);color:#fff;flex:2;}
+.btn-primary:active{background:var(--accent-dk);}
+.btn-ghost{background:var(--bg-soft);color:var(--text2);flex:1;}
+.btn-danger{background:var(--c-rejected-bg);color:var(--c-rejected);}
+
+.detail-hero{display:flex;gap:14px;align-items:center;padding:0 18px 16px;}
+.detail-co-logo{width:54px;height:54px;border-radius:14px;background:var(--accent-lt);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0;}
+.detail-company{font-size:17px;font-weight:800;letter-spacing:-.01em;}
+.detail-role{font-size:13px;color:var(--text2);margin-top:1px;}
+.detail-section{padding:0 18px;margin-bottom:14px;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.detail-item{background:var(--bg-soft);border-radius:var(--radius-xs);padding:10px 12px;}
+.detail-item-lbl{font-size:10.5px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+.detail-item-val{font-size:13px;font-weight:600;}
+.detail-notes{font-size:13px;color:var(--text2);line-height:1.7;background:var(--bg-soft);padding:12px 14px;border-radius:var(--radius-xs);white-space:pre-wrap;}
+.detail-link{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;}
+.detail-link svg{width:15px;height:15px;stroke-width:2.2;}
+
+.toast{position:fixed;bottom:calc(94px + var(--safe-bot));left:50%;transform:translateX(-50%) translateY(16px);background:var(--text);color:#fff;font-size:13px;font-weight:600;padding:11px 22px;border-radius:14px;opacity:0;transition:all .25s;pointer-events:none;z-index:300;white-space:nowrap;box-shadow:var(--shadow-lg);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.reminder-item{display:flex;gap:11px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow);cursor:pointer;}
+.reminder-date-box{width:42px;height:42px;border-radius:11px;background:var(--accent-lt);color:var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
+.reminder-date-box.overdue{background:var(--c-rejected-bg);color:var(--c-rejected);}
+.reminder-day{font-size:15px;font-weight:800;line-height:1;}
+.reminder-month{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+.reminder-body{flex:1;min-width:0;}
+.reminder-title{font-size:13px;font-weight:700;}
+.reminder-sub{font-size:11.5px;color:var(--text2);margin-top:1px;}
+
+/* ===== DESKTOP / LARGE SCREENS ===== */
+@media(min-width:700px){
+  body{max-width:100%;}
+  #topnav .topnav-brand, #topnav .tabs{max-width:100%;width:100%;}
+  .topnav-brand{padding:16px 32px 12px;}
+  .tabs{padding:0 26px 12px;}
+  .tab-btn{font-size:14px;padding:9px 18px;}
+
+  #app-main{max-width:100%;padding-bottom:40px;}
+  .section{padding:24px 32px 0;}
+  .page-title{font-size:30px;}
+
+  /* Home stats: 4 across */
+  .stat-grid{grid-template-columns:repeat(4,1fr);}
+
+  /* Kanban: show full board, no horizontal scroll snap needed but keep scroll if narrow */
+  .kanban-scroller{padding:4px 32px 12px;gap:16px;}
+  .kanban-col{flex:1 1 0;min-width:230px;max-width:none;}
+  .scroll-dots{display:none;}
+
+  /* List: multi-column grid of cards */
+  #apps-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;align-items:start;}
+  #apps-list .app-row{margin-bottom:0;}
+  #apps-list .empty{grid-column:1/-1;}
+
+  /* Stats page */
+  #page-stats .stat-grid{grid-template-columns:repeat(2,1fr);max-width:520px;}
+
+  /* FAB fixed position */
+  .fab{right:32px;bottom:32px;}
+
+  /* Modal as centered dialog instead of bottom sheet */
+  .modal-backdrop{align-items:center;justify-content:center;}
+  .modal-sheet{border-radius:24px;max-width:520px;transform:translateY(20px) scale(.97);max-height:85vh;}
+  .modal-backdrop.open .modal-sheet{transform:translateY(0) scale(1);}
+}
+
+
+
+</style>
+</head>
+<body>
+
+<div id="topnav">
+  <div class="topnav-brand">
+    <div class="brand-name">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      Pipeline
+    </div>
+    <div class="brand-date" id="topbar-date"></div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-home" onclick="goPage('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      Accueil
+    </button>
+    <button class="tab-btn" id="tab-kanban" onclick="goPage('kanban')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="10" rx="1"/></svg>
+      Pipeline
+    </button>
+    <button class="tab-btn" id="tab-list" onclick="goPage('list')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Liste
+    </button>
+    <button class="tab-btn" id="tab-stats" onclick="goPage('stats')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Stats
+    </button>
+  </div>
+</div>
+
+<div id="app-main">
+
+<div class="page active" id="page-home">
+  <div class="section">
+    <div class="page-title" id="greeting">Bonjour 👋</div>
+    <div class="page-sub">Voici l'état de votre recherche d'emploi</div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:var(--accent-lt);color:var(--accent);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+          </div>
+        </div>
+        <div class="stat-num" id="stat-total">0</div>
+        <div class="stat-lbl">Candidatures totales</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:var(--c-interview-bg);color:var(--c-interview);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+        </div>
+        <div class="stat-num" id="stat-interview">0</div>
+        <div class="stat-lbl">Entretiens en cours</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:var(--c-offer-bg);color:var(--c-offer);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+          </div>
+        </div>
+        <div class="stat-num" id="stat-offer">0</div>
+        <div class="stat-lbl">Offres reçues</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:#fdf2ff;color:#c026d3;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+        </div>
+        <div class="stat-num" id="stat-rate">0%</div>
+        <div class="stat-lbl">Taux de réponse</div>
+      </div>
+    </div>
+
+    <div class="section-label">
+      <span>Prochaines actions</span>
+    </div>
+    <div id="reminders-list"></div>
+
+    <div class="section-label" style="margin-top:18px;">
+      <span>Activité récente</span>
+      <span class="see-all" onclick="goPage('list')">Voir tout</span>
+    </div>
+    <div id="recent-list"></div>
+  </div>
+</div>
+
+<div class="page" id="page-kanban">
+  <div class="section" style="padding-bottom:0;">
+    <div class="page-title">Pipeline</div>
+    <div class="page-sub">Vue d'ensemble par étape — glissez pour naviguer</div>
+  </div>
+  <div class="scroll-dots" id="kanban-dots"></div>
+  <div class="kanban-scroller" id="kanban-scroller" onscroll="updateKanbanDots()"></div>
+</div>
+
+<div class="page" id="page-list">
+  <div class="section">
+    <div class="page-title">Toutes les candidatures</div>
+    <div class="page-sub" id="list-count">0 candidature</div>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke="currentColor"/></svg>
+      <input type="text" id="search-input" placeholder="Entreprise, poste, lieu..." oninput="renderList()">
+    </div>
+    <div class="chips" id="status-chips">
+      <div class="chip active" data-f="all" onclick="setListFilter('all')">Toutes</div>
+      <div class="chip" data-f="wishlist" onclick="setListFilter('wishlist')">À postuler</div>
+      <div class="chip" data-f="applied" onclick="setListFilter('applied')">Postulé</div>
+      <div class="chip" data-f="interview" onclick="setListFilter('interview')">Entretien</div>
+      <div class="chip" data-f="offer" onclick="setListFilter('offer')">Offre</div>
+      <div class="chip" data-f="rejected" onclick="setListFilter('rejected')">Refusé</div>
+    </div>
+    <div id="apps-list"></div>
+  </div>
+</div>
+
+<div class="page" id="page-stats">
+  <div class="section">
+    <div class="page-title">Statistiques</div>
+    <div class="page-sub">Analyse de votre recherche d'emploi</div>
+
+    <div class="card">
+      <div class="section-label"><span>Funnel de conversion</span></div>
+      <div id="funnel-content"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-label"><span>Candidatures par semaine</span></div>
+      <div class="week-chart" id="week-chart"></div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-avg-response" style="color:var(--accent);">—</div>
+        <div class="stat-lbl">Délai moyen de réponse</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-active" style="color:var(--c-offer);">0</div>
+        <div class="stat-lbl">Candidatures actives</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<button class="fab" onclick="openFormModal()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+
+<div class="modal-backdrop" id="modal-form" onclick="closeSheet('modal-form')">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-hd">
+      <div class="modal-title" id="form-title">Nouvelle candidature</div>
+      <button class="modal-close" onclick="closeSheet('modal-form')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <div class="form-label">Entreprise</div>
+        <input type="text" id="f-company" placeholder="ex: Google, Decathlon, Capgemini...">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Poste</div>
+        <input type="text" id="f-role" placeholder="ex: Développeur Frontend, Chef de projet...">
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <div class="form-label">Lieu</div>
+          <input type="text" id="f-location" placeholder="Paris, Remote...">
+        </div>
+        <div class="form-group">
+          <div class="form-label">Type de contrat</div>
+          <select id="f-contract">
+            <option value="">— Type —</option>
+            <option>CDI</option>
+            <option>CDD</option>
+            <option>Stage</option>
+            <option>Alternance</option>
+            <option>Freelance</option>
+            <option>Intérim</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <div class="form-label">Date de candidature</div>
+          <input type="date" id="f-date">
+        </div>
+        <div class="form-group">
+          <div class="form-label">Source</div>
+          <select id="f-source">
+            <option value="">— Source —</option>
+            <option>LinkedIn</option>
+            <option>Site entreprise</option>
+            <option>Indeed</option>
+            <option>Cooptation</option>
+            <option>Salon / Forum</option>
+            <option>Candidature spontanée</option>
+            <option>Autre</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Statut</div>
+        <div class="status-picker" id="status-picker">
+          <div class="status-pill sel-wishlist" data-status="wishlist" onclick="selectStatus('wishlist')">À postuler</div>
+          <div class="status-pill sel-applied" data-status="applied" onclick="selectStatus('applied')">Postulé</div>
+          <div class="status-pill sel-interview" data-status="interview" onclick="selectStatus('interview')">Entretien</div>
+          <div class="status-pill sel-offer" data-status="offer" onclick="selectStatus('offer')">Offre</div>
+          <div class="status-pill sel-rejected" data-status="rejected" onclick="selectStatus('rejected')">Refusé</div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <div class="form-label">Salaire / fourchette</div>
+          <input type="text" id="f-salary" placeholder="ex: 38-42k€">
+        </div>
+        <div class="form-group">
+          <div class="form-label">Prochaine action (date)</div>
+          <input type="date" id="f-nextdate">
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Lien de l'offre</div>
+        <input type="text" id="f-link" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Contact / Recruteur</div>
+        <input type="text" id="f-contact" placeholder="Nom, email, téléphone...">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Notes</div>
+        <textarea id="f-notes" rows="3" placeholder="Préparation entretien, retours, impressions..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeSheet('modal-form')">Annuler</button>
+        <button class="btn btn-primary" onclick="saveApplication()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-detail" onclick="closeSheet('modal-detail')">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-hd">
+      <div></div>
+      <button class="modal-close" onclick="closeSheet('modal-detail')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="detail-hero">
+      <div class="detail-co-logo" id="d-logo"></div>
+      <div>
+        <div class="detail-company" id="d-company"></div>
+        <div class="detail-role" id="d-role"></div>
+        <div style="margin-top:6px;" id="d-badge"></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="detail-item-lbl">Lieu</div>
+          <div class="detail-item-val" id="d-location">—</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-lbl">Contrat</div>
+          <div class="detail-item-val" id="d-contract">—</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-lbl">Date candidature</div>
+          <div class="detail-item-val" id="d-date">—</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-lbl">Source</div>
+          <div class="detail-item-val" id="d-source">—</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-lbl">Salaire</div>
+          <div class="detail-item-val" id="d-salary">—</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item-lbl">Prochaine action</div>
+          <div class="detail-item-val" id="d-nextdate">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="detail-section" id="d-contact-section" style="display:none;">
+      <div class="form-label" style="margin-bottom:6px;">Contact</div>
+      <div class="detail-notes" id="d-contact"></div>
+    </div>
+    <div class="detail-section" id="d-link-section" style="display:none;">
+      <a class="detail-link" id="d-link" href="#" target="_blank">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        Voir l'offre originale
+      </a>
+    </div>
+    <div class="detail-section" id="d-notes-section" style="display:none;">
+      <div class="form-label" style="margin-bottom:6px;">Notes</div>
+      <div class="detail-notes" id="d-notes"></div>
+    </div>
+    <div class="detail-section">
+      <div class="form-actions">
+        <button class="btn btn-danger" onclick="deleteApplication()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+        <button class="btn btn-primary" onclick="editFromDetail()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Modifier
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let apps = JSON.parse(localStorage.getItem('pipeline_apps') || '[]');
+let listFilter = 'all', editId = null, detailId = null, selectedStatus = 'wishlist';
+
+const STATUS_LABELS = {
+  wishlist:  {label:'À postuler', cls:'b-wishlist', color:'var(--c-wishlist)'},
+  applied:   {label:'Postulé',    cls:'b-applied', color:'var(--c-applied)'},
+  interview: {label:'Entretien',  cls:'b-interview', color:'var(--c-interview)'},
+  offer:     {label:'Offre',      cls:'b-offer', color:'var(--c-offer)'},
+  rejected:  {label:'Refusé',     cls:'b-rejected', color:'var(--c-rejected)'}
+};
+const STATUS_ORDER = ['wishlist','applied','interview','offer','rejected'];
+const NEXT_STATUS = {wishlist:'applied', applied:'interview', interview:'offer'};
+
+function save() { localStorage.setItem('pipeline_apps', JSON.stringify(apps)); }
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+function fmtDate(d) {
+  if(!d) return '—';
+  const date = new Date(d + 'T00:00:00');
+  return date.toLocaleDateString('fr-FR', {day:'numeric', month:'short', year:'numeric'});
+}
+function fmtDateShort(d) {
+  if(!d) return {day:'--', month:'—'};
+  const date = new Date(d + 'T00:00:00');
+  return {day: date.getDate(), month: date.toLocaleDateString('fr-FR',{month:'short'}).replace('.','')};
+}
+function initials(name) {
+  if(!name) return '?';
+  const words = name.trim().split(/\s+/);
+  if(words.length === 1) return words[0].substring(0,2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+function daysBetween(d1, d2) {
+  return Math.round((new Date(d2) - new Date(d1)) / (1000*60*60*24));
+}
+function todayISO() { return new Date().toISOString().slice(0,10); }
+
+function updateTopbar() {
+  const now = new Date();
+  document.getElementById('topbar-date').textContent = now.toLocaleDateString('fr-FR', {weekday:'short', day:'numeric', month:'short'});
+  const hours = now.getHours();
+  let greet = 'Bonsoir';
+  if(hours < 12) greet = 'Bonjour';
+  else if(hours < 18) greet = 'Bon après-midi';
+  document.getElementById('greeting').textContent = greet + ' 👋';
+}
+
+function goPage(page) {
+  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-'+page).classList.add('active');
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('app-main').scrollTop = 0;
+  if(page === 'home') renderHome();
+  if(page === 'kanban') renderKanban();
+  if(page === 'list') renderList();
+  if(page === 'stats') renderStats();
+}
+function closeSheet(id) { document.getElementById(id).classList.remove('open'); }
+function openSheet(id) { document.getElementById(id).classList.add('open'); }
+function refreshCurrentPage() {
+  const active = document.querySelector('.page.active').id.replace('page-','');
+  goPage(active);
+}
+
+function openFormModal(id = null) {
+  editId = id;
+  if(id) {
+    const a = apps.find(x => x.id === id);
+    if(!a) return;
+    document.getElementById('form-title').textContent = 'Modifier la candidature';
+    document.getElementById('f-company').value = a.company || '';
+    document.getElementById('f-role').value = a.role || '';
+    document.getElementById('f-location').value = a.location || '';
+    document.getElementById('f-contract').value = a.contract || '';
+    document.getElementById('f-date').value = a.date || '';
+    document.getElementById('f-source').value = a.source || '';
+    document.getElementById('f-salary').value = a.salary || '';
+    document.getElementById('f-nextdate').value = a.nextDate || '';
+    document.getElementById('f-link').value = a.link || '';
+    document.getElementById('f-contact').value = a.contact || '';
+    document.getElementById('f-notes').value = a.notes || '';
+    selectStatus(a.status || 'wishlist');
+  } else {
+    document.getElementById('form-title').textContent = 'Nouvelle candidature';
+    ['f-company','f-role','f-location','f-salary','f-link','f-contact','f-notes','f-nextdate'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('f-contract').value = '';
+    document.getElementById('f-source').value = '';
+    document.getElementById('f-date').value = todayISO();
+    selectStatus('wishlist');
+  }
+  openSheet('modal-form');
+}
+
+function selectStatus(status) {
+  selectedStatus = status;
+  document.querySelectorAll('.status-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.status === status);
+  });
+}
+
+function saveApplication() {
+  const company = document.getElementById('f-company').value.trim();
+  const role = document.getElementById('f-role').value.trim();
+  if(!company) { toast('⚠️ Indiquez au moins le nom de l\'entreprise'); return; }
+  const obj = {
+    id: editId || Date.now(),
+    company, role,
+    location: document.getElementById('f-location').value.trim(),
+    contract: document.getElementById('f-contract').value,
+    date: document.getElementById('f-date').value,
+    source: document.getElementById('f-source').value,
+    status: selectedStatus,
+    salary: document.getElementById('f-salary').value.trim(),
+    nextDate: document.getElementById('f-nextdate').value,
+    link: document.getElementById('f-link').value.trim(),
+    contact: document.getElementById('f-contact').value.trim(),
+    notes: document.getElementById('f-notes').value.trim(),
+    createdAt: editId ? (apps.find(x=>x.id===editId)?.createdAt || Date.now()) : Date.now()
+  };
+  if(editId) {
+    const i = apps.findIndex(a => a.id === editId);
+    if(i > -1) apps[i] = obj;
+  } else {
+    apps.push(obj);
+  }
+  save();
+  closeSheet('modal-form');
+  toast(editId ? '✓ Candidature modifiée' : '✓ Candidature ajoutée');
+  refreshCurrentPage();
+}
+
+function openDetail(id) {
+  const a = apps.find(x => x.id === id);
+  if(!a) return;
+  detailId = id;
+  document.getElementById('d-logo').textContent = initials(a.company);
+  document.getElementById('d-company').textContent = a.company;
+  document.getElementById('d-role').textContent = a.role || 'Poste non précisé';
+  const st = STATUS_LABELS[a.status] || STATUS_LABELS.wishlist;
+  document.getElementById('d-badge').innerHTML = `<span class="badge ${st.cls}"><span class="dot"></span>${st.label}</span>`;
+  document.getElementById('d-location').textContent = a.location || '—';
+  document.getElementById('d-contract').textContent = a.contract || '—';
+  document.getElementById('d-date').textContent = a.date ? fmtDate(a.date) : '—';
+  document.getElementById('d-source').textContent = a.source || '—';
+  document.getElementById('d-salary').textContent = a.salary || '—';
+  document.getElementById('d-nextdate').textContent = a.nextDate ? fmtDate(a.nextDate) : '—';
+
+  const contactSec = document.getElementById('d-contact-section');
+  if(a.contact) { contactSec.style.display='block'; document.getElementById('d-contact').textContent = a.contact; }
+  else contactSec.style.display = 'none';
+
+  const linkSec = document.getElementById('d-link-section');
+  if(a.link) { linkSec.style.display='block'; document.getElementById('d-link').href = a.link.startsWith('http') ? a.link : 'https://'+a.link; }
+  else linkSec.style.display = 'none';
+
+  const notesSec = document.getElementById('d-notes-section');
+  if(a.notes) { notesSec.style.display='block'; document.getElementById('d-notes').textContent = a.notes; }
+  else notesSec.style.display = 'none';
+
+  openSheet('modal-detail');
+}
+
+function editFromDetail() {
+  closeSheet('modal-detail');
+  setTimeout(() => openFormModal(detailId), 200);
+}
+
+function deleteApplication() {
+  if(!confirm('Supprimer cette candidature ?')) return;
+  apps = apps.filter(a => a.id !== detailId);
+  save();
+  closeSheet('modal-detail');
+  toast('Candidature supprimée');
+  refreshCurrentPage();
+}
+
+function renderHome() {
+  const total = apps.length;
+  const interview = apps.filter(a => a.status === 'interview').length;
+  const offer = apps.filter(a => a.status === 'offer').length;
+  const responded = apps.filter(a => ['interview','offer','rejected'].includes(a.status)).length;
+  const appliedOrMore = apps.filter(a => a.status !== 'wishlist').length;
+  const rate = appliedOrMore > 0 ? Math.round((responded/appliedOrMore)*100) : 0;
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-interview').textContent = interview;
+  document.getElementById('stat-offer').textContent = offer;
+  document.getElementById('stat-rate').textContent = rate + '%';
+
+  const today = todayISO();
+  const upcoming = apps.filter(a => a.nextDate).sort((a,b) => a.nextDate.localeCompare(b.nextDate)).slice(0,5);
+  const remEl = document.getElementById('reminders-list');
+  if(!upcoming.length) {
+    remEl.innerHTML = `<div class="empty" style="padding:24px 10px;">
+      <div class="empty-icon" style="width:46px;height:46px;margin-bottom:10px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      <h3 style="font-size:13px;">Aucune action prévue</h3>
+      <p>Ajoutez une date de suivi à vos candidatures pour ne rien oublier.</p>
+    </div>`;
+  } else {
+    remEl.innerHTML = upcoming.map(a => {
+      const d = fmtDateShort(a.nextDate);
+      const overdue = a.nextDate < today;
+      return `<div class="reminder-item" onclick="openDetail(${a.id})">
+        <div class="reminder-date-box ${overdue?'overdue':''}">
+          <div class="reminder-day">${d.day}</div>
+          <div class="reminder-month">${d.month}</div>
+        </div>
+        <div class="reminder-body">
+          <div class="reminder-title">${a.company}${a.role ? ' — '+a.role : ''}</div>
+          <div class="reminder-sub">${overdue ? '⚠️ En retard' : 'À venir'} · ${STATUS_LABELS[a.status].label}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const recent = apps.slice().sort((a,b) => b.createdAt - a.createdAt).slice(0,4);
+  const recEl = document.getElementById('recent-list');
+  if(!recent.length) {
+    recEl.innerHTML = `<div class="empty">
+      <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></div>
+      <h3>Aucune candidature</h3>
+      <p>Appuyez sur le bouton + pour ajouter votre première candidature.</p>
+    </div>`;
+  } else {
+    recEl.innerHTML = recent.map(a => renderAppRow(a)).join('');
+  }
+}
+
+function renderAppRow(a) {
+  const st = STATUS_LABELS[a.status] || STATUS_LABELS.wishlist;
+  return `<div class="app-row" onclick="openDetail(${a.id})">
+    <div class="co-logo">${initials(a.company)}</div>
+    <div class="app-row-body">
+      <div class="app-row-top">
+        <div class="app-company">${a.company}</div>
+        <span class="badge ${st.cls}"><span class="dot"></span>${st.label}</span>
+      </div>
+      <div class="app-role">${a.role || 'Poste non précisé'}</div>
+      <div class="app-meta-row">
+        ${a.location ? `<div class="app-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${a.location}</div>` : ''}
+        ${a.date ? `<div class="app-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${fmtDate(a.date)}</div>` : ''}
+        ${a.salary ? `<div class="app-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>${a.salary}</div>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderKanban() {
+  const scroller = document.getElementById('kanban-scroller');
+  const dots = document.getElementById('kanban-dots');
+  dots.innerHTML = STATUS_ORDER.map((s,i) => `<div class="scroll-dot ${i===0?'active':''}" data-idx="${i}"></div>`).join('');
+
+  scroller.innerHTML = STATUS_ORDER.map(status => {
+    const items = apps.filter(a => a.status === status).sort((a,b) => b.createdAt - a.createdAt);
+    const st = STATUS_LABELS[status];
+    let cardsHtml = '';
+    if(!items.length) {
+      cardsHtml = `<div class="kc-empty">Aucune candidature</div>`;
+    } else {
+      cardsHtml = items.map(a => {
+        const nextSt = NEXT_STATUS[status];
+        return `<div class="kanban-card" onclick="openDetail(${a.id})">
+          <div class="kc-top">
+            <div>
+              <div class="kc-company">${a.company}</div>
+              <div class="kc-role">${a.role || 'Poste non précisé'}</div>
+            </div>
+            <div class="co-logo" style="width:34px;height:34px;font-size:12px;">${initials(a.company)}</div>
+          </div>
+          <div class="kc-foot">
+            <div class="kc-date">${a.date ? fmtDate(a.date) : '—'}</div>
+            <div class="kc-actions">
+              ${nextSt ? `<button class="kc-btn" onclick="event.stopPropagation();moveStatus(${a.id},'${nextSt}')" title="Avancer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>` : ''}
+              ${status !== 'rejected' ? `<button class="kc-btn" onclick="event.stopPropagation();moveStatus(${a.id},'rejected')" title="Refusé" style="color:var(--c-rejected);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>` : ''}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    return `<div class="kanban-col">
+      <div class="kanban-col-hd">
+        <div class="kanban-col-title"><span class="dot" style="color:${st.color};width:8px;height:8px;"></span>${st.label}</div>
+        <div class="kanban-count">${items.length}</div>
+      </div>
+      ${cardsHtml}
+    </div>`;
+  }).join('');
+}
+
+function moveStatus(id, newStatus) {
+  const a = apps.find(x => x.id === id);
+  if(!a) return;
+  a.status = newStatus;
+  save();
+  toast('→ ' + STATUS_LABELS[newStatus].label);
+  renderKanban();
+}
+
+function updateKanbanDots() {
+  const scroller = document.getElementById('kanban-scroller');
+  const cols = scroller.querySelectorAll('.kanban-col');
+  if(!cols.length) return;
+  const scrollLeft = scroller.scrollLeft;
+  const colWidth = cols[0].offsetWidth + 12;
+  const idx = Math.round(scrollLeft / colWidth);
+  document.querySelectorAll('.scroll-dot').forEach((d,i) => d.classList.toggle('active', i===idx));
+}
+
+function setListFilter(f) {
+  listFilter = f;
+  document.querySelectorAll('[data-f]').forEach(c => c.classList.toggle('active', c.dataset.f === f));
+  renderList();
+}
+
+function renderList() {
+  const search = (document.getElementById('search-input').value || '').toLowerCase();
+  let filtered = apps.filter(a => {
+    const ms = !search || (a.company||'').toLowerCase().includes(search) || (a.role||'').toLowerCase().includes(search) || (a.location||'').toLowerCase().includes(search);
+    const mf = listFilter === 'all' || a.status === listFilter;
+    return ms && mf;
+  });
+  filtered = filtered.slice().sort((a,b) => b.createdAt - a.createdAt);
+
+  document.getElementById('list-count').textContent = filtered.length + ' candidature' + (filtered.length !== 1 ? 's' : '');
+
+  const list = document.getElementById('apps-list');
+  if(!filtered.length) {
+    list.innerHTML = `<div class="empty">
+      <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
+      <h3>${apps.length ? 'Aucun résultat' : 'Aucune candidature'}</h3>
+      <p>${apps.length ? 'Essayez une autre recherche ou un autre filtre.' : 'Appuyez sur le bouton + pour commencer votre suivi.'}</p>
+    </div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(a => renderAppRow(a)).join('');
+}
+
+function renderStats() {
+  const total = apps.length || 1;
+  const stages = [
+    {key:'wishlist', label:'À postuler'},
+    {key:'applied', label:'Postulé'},
+    {key:'interview', label:'Entretien'},
+    {key:'offer', label:'Offre'},
+    {key:'rejected', label:'Refusé'}
+  ];
+  const funnelEl = document.getElementById('funnel-content');
+  if(!apps.length) {
+    funnelEl.innerHTML = `<div class="empty" style="padding:30px 10px;">
+      <p>Ajoutez des candidatures pour voir vos statistiques.</p>
+    </div>`;
+  } else {
+    funnelEl.innerHTML = stages.map(s => {
+      const count = apps.filter(a => a.status === s.key).length;
+      const pct = Math.round((count/total)*100);
+      const color = STATUS_LABELS[s.key].color;
+      return `<div class="funnel-row">
+        <div class="funnel-lbl">${s.label}</div>
+        <div class="funnel-track">
+          <div class="funnel-fill" style="width:${Math.max(pct,count>0?14:0)}%;background:${color};">
+            ${count > 0 ? `<span>${count}</span>` : ''}
+          </div>
+        </div>
+        <div class="funnel-pct">${pct}%</div>
+      </div>`;
+    }).join('');
+  }
+
+  const weekEl = document.getElementById('week-chart');
+  const weeks = [];
+  const now = new Date();
+  for(let i = 7; i >= 0; i--) {
+    const start = new Date(now);
+    start.setDate(now.getDate() - now.getDay() - (i*7));
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    weeks.push({start, end, count:0});
+  }
+  apps.forEach(a => {
+    if(!a.date) return;
+    const d = new Date(a.date + 'T00:00:00');
+    weeks.forEach(w => { if(d >= w.start && d <= w.end) w.count++; });
+  });
+  const maxCount = Math.max(...weeks.map(w=>w.count), 1);
+  if(!apps.length) {
+    weekEl.innerHTML = `<div class="empty" style="padding:20px 10px;width:100%;"><p>Pas encore de données.</p></div>`;
+  } else {
+    weekEl.innerHTML = weeks.map(w => {
+      const h = Math.max((w.count/maxCount)*100, w.count>0?8:2);
+      return `<div class="week-bar-wrap">
+        <div class="week-bar" style="height:${h}%;${w.count===0?'background:var(--border2);':''}"></div>
+        <div class="week-lbl">${w.start.getDate()}/${w.start.getMonth()+1}</div>
+      </div>`;
+    }).join('');
+  }
+
+  let totalDays = 0, countResp = 0;
+  apps.forEach(a => {
+    if(a.date && ['interview','offer','rejected'].includes(a.status)) {
+      const respDate = a.nextDate || null;
+      if(respDate) {
+        const days = daysBetween(a.date, respDate);
+        if(days >= 0) { totalDays += days; countResp++; }
+      }
+    }
+  });
+  document.getElementById('stat-avg-response').textContent = countResp > 0 ? Math.round(totalDays/countResp) + ' j' : '—';
+
+  const active = apps.filter(a => ['applied','interview'].includes(a.status)).length;
+  document.getElementById('stat-active').textContent = active;
+}
+
+updateTopbar();
+renderHome();
+</script>
+</body>
+</html>
